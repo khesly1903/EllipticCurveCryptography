@@ -21,10 +21,10 @@ class Curve:
     @property
     def GPoint(self) -> "Point":
         return Point(self, self.Gx, self.Gy)
-    
+
     def __str__(self):
         return f"{self.name}"
-    
+
     #for given hex value (eg. encrypted message) it creates point
     #slient shift is for transporing the shift value of c_2
     #   when message decoding, the m point has shift 0
@@ -47,6 +47,19 @@ class Curve:
         y = int.from_bytes(y_bytes, 'big')
 
         return Point(self, x, y, shift, slient_shift)
+
+
+    def create_point_unshift(self, hex_point: str) -> "Point":
+        point_hex = bytes.fromhex(hex_point)
+        length = int(len(point_hex) / 2)
+
+        x_bytes = point_hex[:length]
+        y_bytes = point_hex[length:]
+
+        x = int.from_bytes(x_bytes, "big")
+        y = int.from_bytes(y_bytes, "big")
+
+        return Point(self, x, y)
 
 
 
@@ -89,7 +102,7 @@ class Point:
         return (self.x, self.y)
 
 
-    #embedded points are sended this way 
+    #embedded points are sended this way
     #   (actually i send this way there is some hashing algorithms
     #   to embed the encryped points
     #   https://www.ietf.org/archive/id/draft-irtf-cfrg-hash-to-curve-10.html)
@@ -105,6 +118,16 @@ class Point:
 
         merged_bytes = x_bytes + shift_bytes + slient_shift_bytes + y_bytes
         return merged_bytes.hex()
+
+    #same logic with hex_merge
+    #but since eg. Diffie-Hellman key-exchange does not need shift operation
+    @property
+    def hex_merge_unshift(self) -> str:
+
+        x_bytes = self.x.to_bytes((self.curve.p.bit_length() + 7) // 8, "big")
+        y_bytes = self.y.to_bytes((self.curve.p.bit_length() + 7) // 8, "big")
+        return (x_bytes + y_bytes).hex()
+
 
     def set_shift(self, shift: int) -> "Point":
         self.shift = shift
@@ -268,3 +291,4 @@ P521 = Curve(
     Gy = 0x011839296a789a3bc0045c8a5fb42c7d1bd998f54449579b446817afbd17273e662c97ee72995ef42640c550b9013fad0761353c7086a272c24088be94769fd16650,
     msg_length = 1060
 )
+
