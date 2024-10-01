@@ -1,4 +1,4 @@
-import elliptic_curve as ec  
+import elliptic_curve as ec
 import random
 from typing import Tuple
 
@@ -8,7 +8,7 @@ class ElGamal:
         self.P = curve.GPoint
 
     @staticmethod
-    def public_parameters() -> Tuple[ec.Curve, int]:
+    def public_curve() -> ec.Curve:
         print("Select an elliptic curve (Empty for default)")
         print("    1. P256")
         print("    2. secp256k1")
@@ -26,20 +26,22 @@ class ElGamal:
             curve = ec.P256
             print("Defaulting to P-256.")
 
+        return curve
+
+    @property
+    def secret_n(self) -> int:
         print("\nEnter secret n (Empty for randomize): ")
 
-        n_input = input("n: ")
+        n = input("n: ")
 
-        if n_input == "":
+        if n == "":
             print("Defaulting to random n.")
-            n = random.randint(1, curve.p - 1)
-            print(f"n: {n}\n")
-        elif (int(n_input) > 0) & (int(n_input) < curve.p):
-            n = int(n_input)
+            n = random.randint(1, self.curve.p - 1)
+            return n
+        elif (int(n) > 0) & (int(n) < self.curve.p):
+            return int(n)
         else:
             raise ValueError("Invalid n value.")
-
-        return (curve, n)
 
     def key(self, n: int) -> str:
         key_point = ec.s_multiplication(self.curve, self.P, n)
@@ -93,19 +95,16 @@ class ElGamal:
 
 # Sample usage
 msg = "Mustafa Kemal Ataturk was the founder and first president of the Republic of Turkey, leading the Turkish nation to freedom."
-
-curve, n = ElGamal.public_parameters()
+curve = ElGamal.public_curve()
 
 eg = ElGamal(curve)
 
-keyQ = eg.key(n)
+n = eg.secret_n
 
-enc = eg.encryption(keyQ, msg)
+Q = eg.key(n)
+
+enc = eg.encryption(Q, msg)
 print(f"\n  Encrypted message\n\n{enc}")
 
 dec = eg.decryption(n, enc)
 print(f"\n  Decrypted message\n\n{dec}")
-
-
-
-
